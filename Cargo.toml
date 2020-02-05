@@ -1,0 +1,8 @@
+[package]
+name = "diligent-date-parser"
+version = "0.1.0"
+authors = ["Andrey Kutejko <andy128k@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+chrono = "0.4"
