@@ -1,11 +1,15 @@
 [package]
 name = "diligent-date-parser"
+description = "Library for parsing datetime in unknown format"
 version = "0.1.0"
 authors = ["Andrey Kutejko <andy128k@gmail.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
 readme = "README.md"
 keywords = ["date", "datetime", "parser", "parsing"]
+homepage = "https://github.com/rust-syndication/diligent-date-parser"
+repository = "https://github.com/rust-syndication/diligent-date-parser"
+documentation = "https://docs.rs/diligent-date-parser/"
 
 [dependencies]
 chrono = "0.4"
