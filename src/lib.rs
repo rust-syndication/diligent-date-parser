@@ -76,6 +76,7 @@ pub fn parse_date(string: &str) -> Option<DateTime<FixedOffset>> {
     None.or_else(|| rfc3339(trimmed))
         .or_else(|| cut(trimmed, 20).and_then(rfc3339))
         .or_else(|| cut(trimmed, 19).map(|s| suffix(s, "Z")).and_then(rfc3339))
+        .or_else(|| DateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S%.3f %z").ok())
         .or_else(|| {
             cut(trimmed, 16)
                 .map(|s| suffix(s, ":00Z"))
@@ -173,6 +174,11 @@ mod test {
         assert_eq!(
             parse_date("2014-01-11"),
             Some(Utc.ymd(2014, 1, 11).and_hms(0, 0, 0).into())
+        );
+
+        assert_eq!(
+            parse_date("2014-01-11 01:18:21 +0000"),
+            Some(Utc.ymd(2014, 01, 11).and_hms(1, 18, 21).into())
         );
 
         assert_eq!(
