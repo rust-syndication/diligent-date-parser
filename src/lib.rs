@@ -52,7 +52,14 @@ fn rfc2822<T: AsRef<str>>(string: T) -> Option<DateTime<FixedOffset>> {
     DateTime::parse_from_rfc2822(string.as_ref()).ok()
 }
 
-fn strptime(string: &str, format: &str) -> Option<DateTime<FixedOffset>> {
+fn utc_datetime(string: &str, format: &str) -> Option<DateTime<FixedOffset>> {
+    NaiveDateTime::parse_from_str(string, format)
+        .map(|d| DateTime::from_utc(d, Utc))
+        .ok()
+        .map(|d: DateTime<Utc>| d.into())
+}
+
+fn utc_date(string: &str, format: &str) -> Option<DateTime<FixedOffset>> {
     NaiveDate::parse_from_str(string, format)
         .map(|d| DateTime::from_utc(d.and_hms(0, 0, 0), Utc))
         .ok()
@@ -77,6 +84,7 @@ pub fn parse_date(string: &str) -> Option<DateTime<FixedOffset>> {
         .or_else(|| cut(trimmed, 20).and_then(rfc3339))
         .or_else(|| cut(trimmed, 19).map(|s| suffix(s, "Z")).and_then(rfc3339))
         .or_else(|| DateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S%.3f %z").ok())
+        .or_else(|| utc_datetime(trimmed, "%Y-%m-%d %H:%M:%S%.3f"))
         .or_else(|| {
             cut(trimmed, 16)
                 .map(|s| suffix(s, ":00Z"))
@@ -98,15 +106,15 @@ pub fn parse_date(string: &str) -> Option<DateTime<FixedOffset>> {
         .or_else(|| rfc2822(suffix(trimmed, ":00:00 +0000")))
         .or_else(|| rfc2822(suffix(trimmed, " 00:00:00 +0000")))
         .or_else(|| DateTime::parse_from_str(trimmed, "%a %b %d %H:%M:%S %z %Y").ok()) // twitter's format
-        .or_else(|| strptime(trimmed, "%b %d %Y"))
-        .or_else(|| strptime(trimmed, "%b %e %Y"))
-        .or_else(|| strptime(trimmed, "%B %d %Y"))
-        .or_else(|| strptime(trimmed, "%B %e %Y"))
-        .or_else(|| strptime(trimmed, "%b %d, %Y"))
-        .or_else(|| strptime(trimmed, "%b %e, %Y"))
-        .or_else(|| strptime(trimmed, "%B %d, %Y"))
-        .or_else(|| strptime(trimmed, "%B %e, %Y"))
-        .or_else(|| strptime(trimmed, "%m/%d/%Y"))
+        .or_else(|| utc_date(trimmed, "%b %d %Y"))
+        .or_else(|| utc_date(trimmed, "%b %e %Y"))
+        .or_else(|| utc_date(trimmed, "%B %d %Y"))
+        .or_else(|| utc_date(trimmed, "%B %e %Y"))
+        .or_else(|| utc_date(trimmed, "%b %d, %Y"))
+        .or_else(|| utc_date(trimmed, "%b %e, %Y"))
+        .or_else(|| utc_date(trimmed, "%B %d, %Y"))
+        .or_else(|| utc_date(trimmed, "%B %e, %Y"))
+        .or_else(|| utc_date(trimmed, "%m/%d/%Y"))
 }
 
 #[cfg(test)]
@@ -118,6 +126,14 @@ mod test {
         assert_eq!(
             parse_date("2011-11-17T08:00:00-08:00"),
             Some(Utc.ymd(2011, 11, 17).and_hms(16, 0, 0).into())
+        );
+        assert_eq!(
+            parse_date("2011-11-17T08:00:00-08:00"),
+            Some(
+                FixedOffset::west(8 * 3600)
+                    .ymd(2011, 11, 17)
+                    .and_hms(8, 0, 0)
+            )
         );
         assert_eq!(
             parse_date("2011-11-23T18:12:20Z"),
@@ -180,7 +196,22 @@ mod test {
             parse_date("2014-01-11 01:18:21 +0000"),
             Some(Utc.ymd(2014, 01, 11).and_hms(1, 18, 21).into())
         );
-
+        assert_eq!(
+            parse_date("2014-01-11 01:18:21 +0100"),
+            Some(FixedOffset::east(3600).ymd(2014, 01, 11).and_hms(1, 18, 21))
+        );
+        assert_eq!(
+            parse_date(" 2014-01-11 01:18:21 "),
+            Some(Utc.ymd(2014, 01, 11).and_hms(1, 18, 21).into())
+        );
+        assert_eq!(
+            parse_date(" 2014-01-11 01:18:21.125 "),
+            Some(
+                Utc.ymd(2014, 01, 11)
+                    .and_hms_micro(1, 18, 21, 125000)
+                    .into()
+            )
+        );
         assert_eq!(
             parse_date("Fri, 12 Feb 2016 14:08:24 +0000"),
             Some(Utc.ymd(2016, 2, 12).and_hms(14, 8, 24).into())
