@@ -115,6 +115,7 @@ pub fn parse_date(string: &str) -> Option<DateTime<FixedOffset>> {
         .or_else(|| utc_date(trimmed, "%B %d, %Y"))
         .or_else(|| utc_date(trimmed, "%B %e, %Y"))
         .or_else(|| utc_date(trimmed, "%m/%d/%Y"))
+        .or_else(|| utc_date(trimmed, "%d.%m.%Y"))
 }
 
 #[cfg(test)]
