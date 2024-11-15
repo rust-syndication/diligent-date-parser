@@ -81,10 +81,10 @@ fn utc_date(string: &str, format: &str) -> Option<DateTime<FixedOffset>> {
 pub fn parse_date(string: &str) -> Option<DateTime<FixedOffset>> {
     let trimmed = string.trim();
     None.or_else(|| rfc3339(trimmed))
-        .or_else(|| cut(trimmed, 20).and_then(rfc3339))
-        .or_else(|| cut(trimmed, 19).map(|s| suffix(s, "Z")).and_then(rfc3339))
         .or_else(|| DateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S%.3f %z").ok())
         .or_else(|| utc_datetime(trimmed, "%Y-%m-%d %H:%M:%S%.3f"))
+        .or_else(|| cut(trimmed, 20).and_then(rfc3339))
+        .or_else(|| cut(trimmed, 19).map(|s| suffix(s, "Z")).and_then(rfc3339))
         .or_else(|| {
             cut(trimmed, 16)
                 .map(|s| suffix(s, ":00Z"))
