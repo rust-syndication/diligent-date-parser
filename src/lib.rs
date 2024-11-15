@@ -54,7 +54,7 @@ fn rfc2822<T: AsRef<str>>(string: T) -> Option<DateTime<FixedOffset>> {
 
 fn utc_datetime(string: &str, format: &str) -> Option<DateTime<FixedOffset>> {
     NaiveDateTime::parse_from_str(string, format)
-        .map(|d| DateTime::from_utc(d, Utc))
+        .map(|d| Utc.from_utc_datetime(&d))
         .ok()
         .map(|d: DateTime<Utc>| d.into())
 }
@@ -63,7 +63,7 @@ fn utc_date(string: &str, format: &str) -> Option<DateTime<FixedOffset>> {
     let date = NaiveDate::parse_from_str(string, format).ok()?;
     let time = NaiveTime::from_hms_opt(0, 0, 0)?;
     let datetime = NaiveDateTime::new(date, time);
-    Some(DateTime::<Utc>::from_utc(datetime, Utc).into())
+    Some(Utc.from_utc_datetime(&datetime).into())
 }
 
 /// Parses a string using multiple formats
